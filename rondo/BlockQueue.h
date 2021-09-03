@@ -18,7 +18,7 @@ namespace rondo{
         typedef T value_type;
         mutable std::mutex mutex;
         std::queue<T> queue;
-        std::condition_variable isempty;
+        mutable std::condition_variable isempty;
     public:
         BlockQueue():mutex(),queue(),isempty(){}
         void push(const value_type &val){
@@ -34,7 +34,7 @@ namespace rondo{
             assert(!queue.empty());
             return queue.front();
         }
-        const T& front(){
+        const T& front()const{
             std::unique_lock<std::mutex> lock(mutex);
             while (queue.empty()){
                 isempty.wait(lock);
@@ -50,7 +50,7 @@ namespace rondo{
             assert(!queue.empty());
             return queue.pop();
         }
-        T& take(){
+        T take(){
             std::unique_lock<std::mutex> lock(mutex);
             while (queue.empty()){
                 isempty.wait(lock);
@@ -59,6 +59,10 @@ namespace rondo{
             T res=queue.front();
             queue.pop();
             return res;
+        }
+        size_t size()const{
+            std::unique_lock<std::mutex> lock;
+            return queue.size();
         }
     };
 }
